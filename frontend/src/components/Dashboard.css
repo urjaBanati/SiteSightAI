@@ -1,0 +1,18 @@
+.dashboard {
+  background-color: #0b0c1b;
+  color: white;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.dashboard-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.site-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}

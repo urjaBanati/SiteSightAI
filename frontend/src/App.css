@@ -1,0 +1,87 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #0b0c17;
+  color: #ffffff;
+}
+
+.app-title {
+  text-align: center;
+  margin: 20px 0;
+  color: #1e90ff;
+}
+
+.dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.site-card {
+  background-color: #1a1c2b;
+  border-radius: 10px;
+  padding: 15px;
+  width: 300px;
+  position: relative;
+  box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+  transition: transform 0.2s;
+}
+
+.site-card:hover {
+  transform: translateY(-5px);
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.info-icon {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.recommendation-popup {
+  position: absolute;
+  top: 35px;
+  right: 10px;
+  background-color: #111223;
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  width: 250px;
+  font-size: 13px;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+}
+
+.site-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.health-badge {
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 14px;
+  width: fit-content;
+  color: #000;
+}
+
+.site-health-score {
+  margin-top: 10px;
+  font-weight: bold;
+}
+button {
+  font-family: inherit;
+  transition: transform 0.1s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}

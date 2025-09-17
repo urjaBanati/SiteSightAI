@@ -1,0 +1,30 @@
+.site-card {
+  background-color: #1c1f3a;
+  padding: 15px;
+  border-radius: 8px;
+  width: 300px;
+  position: relative;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-icon {
+  cursor: pointer;
+  position: relative;
+}
+
+.info-popup {
+  position: absolute;
+  top: 25px;
+  right: 0;
+  background-color: #2a2d5b;
+  padding: 10px;
+  border-radius: 6px;
+  width: 250px;
+  font-size: 14px;
+  z-index: 10;
+}
