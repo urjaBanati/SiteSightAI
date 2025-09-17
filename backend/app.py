@@ -3,14 +3,14 @@ from fastapi.responses import JSONResponse
 import json
 import pandas as pd
 import joblib
+import random
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SiteSightAI Backend")
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or your frontend URL
+    allow_origins=["*"],  # Allow frontend access
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,7 +35,7 @@ with open("data/sites_clean.json") as f:
 # Weights and mappings
 # -----------------------------
 weights = {"Connectivity": 0.3, "Update": 0.3, "Alerts": 0.2, "Security": 0.2}
-connectivity_map = {"Connected": 1, "NeedsAttention": 0.5, "NotRecentlyConnected": 0}
+connectivity_map = {"Connected": 1, "NeedsAttention": 0.5, "NotRecentlyConnected": 0.6}
 update_map = {"UptoDate": 1, "UpdateAvailable": 0.5, "NeedsAttention": 0.5, "Unknown": 0, "UpdateInProgress": 0.5}
 alert_map = {"NoAlerts": 1, "NeedsAttention": 0.5}
 security_map = {"Compliant": 1, "NonCompliant": 0.5}
@@ -45,24 +45,39 @@ security_map = {"Compliant": 1, "NonCompliant": 0.5}
 # -----------------------------
 recommendations = {
     "Connectivity": [
-        "Check site network/firewall",
-        "Verify DNS resolution",
-        "Inspect router/switch logs"
+        "Check site network/firewall", "Verify DNS resolution", "Inspect router/switch logs",
+        "Check ISP/service provider status", "Run ping and traceroute diagnostics", "Test bandwidth and latency",
+        "Validate VPN or private link tunnels", "Check DHCP/Static IP configuration", "Review load balancer health",
+        "Examine physical cabling/ports", "Monitor packet loss and jitter", "Audit QoS or traffic shaping policies",
+        "Verify SSL/TLS handshake for secure connections", "Confirm routing table consistency",
+        "Check wireless interference (if Wi-Fi dependent)"
     ],
     "Update": [
-        "Check for recent update availability",
-        "Verify if update download failed",
-        "Check permissions for update installation"
+        "Check for recent update availability", "Verify if update download failed", "Check permissions for update installation",
+        "Confirm device has sufficient disk space", "Validate system date/time (NTP sync)", "Review update installation logs",
+        "Restart services post-update if required", "Ensure rollback/recovery points are set",
+        "Check dependency patches or prerequisites", "Cross-check update version compatibility",
+        "Audit devices with pending reboots", "Review group policy or WSUS configurations",
+        "Check update throttling or bandwidth caps", "Ensure security patches applied before deadlines",
+        "Test update in staging before full rollout"
     ],
     "Alerts": [
-        "Review alert logs for recurring issues",
-        "Classify alerts by severity",
-        "Escalate high-priority alerts"
+        "Review alert logs for recurring issues", "Classify alerts by severity", "Escalate high-priority alerts",
+        "Set alert suppression for false positives", "Define auto-remediation playbooks", "Tag alerts with responsible owners",
+        "Check alert thresholds and fine-tune", "Validate alert integration with ticketing system",
+        "Review alert correlation across systems", "Verify escalation paths for after-hours",
+        "Archive and report historical alerts", "Perform RCA (Root Cause Analysis) on repeated alerts",
+        "Ensure monitoring agents are healthy", "Simulate incident scenarios for alert validation",
+        "Audit alert notifications (email/SMS/webhook)"
     ],
     "Security": [
-        "Check patch compliance",
-        "Validate access control policies",
-        "Run vulnerability scan"
+        "Check patch compliance", "Validate access control policies", "Run vulnerability scan",
+        "Verify antivirus/EDR signatures updated", "Confirm encryption at rest and in transit",
+        "Audit expired or weak TLS certificates", "Check multi-factor authentication enforcement",
+        "Review firewall/NSG rules", "Audit privileged account usage", "Ensure least privilege principle applied",
+        "Check endpoint hardening (disable unused ports)", "Run penetration test in staging environment",
+        "Review SIEM dashboards for anomalies", "Verify data backup encryption",
+        "Check compliance with GDPR/ISO/NIST/PCI standards"
     ]
 }
 
@@ -114,8 +129,22 @@ def map_health_to_label(score):
     else:
         return 0
 
+def rule_based_recommendations(resource):
+    recs = []
+    if resource["Connectivity"] in ["NotRecentlyConnected", "NeedsAttention"]:
+        recs.append(random.choice(recommendations["Connectivity"]))
+    if resource["Update"] in ["NeedsAttention", "UpdateInProgress", "UpdateAvailable"]:
+        recs.append(random.choice(recommendations["Update"]))
+    if resource["Alerts"] == "NeedsAttention":
+        recs.append(random.choice(recommendations["Alerts"]))
+    if resource["Security"] == "NonCompliant":
+        recs.append(random.choice(recommendations["Security"]))
+    if not recs:
+        recs.append("No action required")
+    return recs[:3]
+
 def predict_recommendations_ml(resource):
-    """Use trained RandomForest model to predict recommendations"""
+    """Use trained RandomForest model to predict recommendations, fallback to rule-based if empty"""
     features = pd.DataFrame([{
         "Connectivity": resource["Connectivity"],
         "Update": resource["Update"],
@@ -123,9 +152,13 @@ def predict_recommendations_ml(resource):
         "Security": resource["Security"]
     }])
     features = pd.get_dummies(features).reindex(columns=rec_features, fill_value=0)
+
     pred = rec_model.predict(features)
     recs = mlb.inverse_transform(pred)
-    return recs[0] if recs else ["No action required"]
+
+    if not recs or not recs[0]:
+        return rule_based_recommendations(resource.to_dict())
+    return recs[0]
 
 # -----------------------------
 # Endpoint
@@ -168,21 +201,23 @@ def ranked_sites():
             "Security": round(row["SecurityScore"], 2)
         }
 
-        # Get ML-powered recommendations for each weak signal
+        # Get recommendations for each resource
         site_resources = df[df["SiteName"] == row["SiteName"]]
         recs_per_site = {}
         for _, res in site_resources.iterrows():
-            recs_per_site[res["ResourceName"]] = predict_recommendations_ml(res)
+            recs_per_site[res["ResourceName"]] = [
+                f"{r}" for r in predict_recommendations_ml(res)
+            ]
 
         response.append({
             "SiteName": row["SiteName"],
             "RankScore": round(float(row["RankScore"]), 4),
             "SiteHealthScore": round(float(row["SiteHealthScore"]), 2),
             "HealthSignals": health_scores,
-            "Connectivity": row["ConnectivityScore"],
-            "Update": row["UpdateScore"],
-            "Alerts": row["AlertScore"],
-            "Security": row["SecurityScore"],
+            "Connectivity": site_resources["Connectivity"].mode()[0] if not site_resources.empty else "Unknown",
+            "Update": site_resources["Update"].mode()[0] if not site_resources.empty else "Unknown",
+            "Alerts": site_resources["Alerts"].mode()[0] if not site_resources.empty else "Unknown",
+            "Security": site_resources["Security"].mode()[0] if not site_resources.empty else "Unknown",
             "Recommendations": recs_per_site
         })
 

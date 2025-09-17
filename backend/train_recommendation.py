@@ -1,4 +1,5 @@
 import json
+import random
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -22,10 +23,74 @@ alert_map = {"NoAlerts": 1, "NeedsAttention": 0.5}
 security_map = {"Compliant": 1, "NonCompliant": 0.5}
 
 recommendations = {
-    "Connectivity": ["Check site network/firewall","Verify DNS resolution","Inspect router/switch logs"],
-    "Update": ["Check for recent update availability","Verify if update download failed","Check permissions for update installation"],
-    "Alerts": ["Review alert logs for recurring issues","Classify alerts by severity","Escalate high-priority alerts"],
-    "Security": ["Check patch compliance","Validate access control policies","Run vulnerability scan"]
+    "Connectivity": [
+        "Check site network/firewall",
+        "Verify DNS resolution",
+        "Inspect router/switch logs",
+        "Check ISP/service provider status",
+        "Run ping and traceroute diagnostics",
+        "Test bandwidth and latency",
+        "Validate VPN or private link tunnels",
+        "Check DHCP/Static IP configuration",
+        "Review load balancer health",
+        "Examine physical cabling/ports",
+        "Monitor packet loss and jitter",
+        "Audit QoS or traffic shaping policies",
+        "Verify SSL/TLS handshake for secure connections",
+        "Confirm routing table consistency",
+        "Check wireless interference (if Wi-Fi dependent)"
+    ],
+    "Update": [
+        "Check for recent update availability",
+        "Verify if update download failed",
+        "Check permissions for update installation",
+        "Confirm device has sufficient disk space",
+        "Validate system date/time (NTP sync)",
+        "Review update installation logs",
+        "Restart services post-update if required",
+        "Ensure rollback/recovery points are set",
+        "Check dependency patches or prerequisites",
+        "Cross-check update version compatibility",
+        "Audit devices with pending reboots",
+        "Review group policy or WSUS configurations",
+        "Check update throttling or bandwidth caps",
+        "Ensure security patches applied before deadlines",
+        "Test update in staging before full rollout"
+    ],
+    "Alerts": [
+        "Review alert logs for recurring issues",
+        "Classify alerts by severity",
+        "Escalate high-priority alerts",
+        "Set alert suppression for false positives",
+        "Define auto-remediation playbooks",
+        "Tag alerts with responsible owners",
+        "Check alert thresholds and fine-tune",
+        "Validate alert integration with ticketing system",
+        "Review alert correlation across systems",
+        "Verify escalation paths for after-hours",
+        "Archive and report historical alerts",
+        "Perform RCA (Root Cause Analysis) on repeated alerts",
+        "Ensure monitoring agents are healthy",
+        "Simulate incident scenarios for alert validation",
+        "Audit alert notifications (email/SMS/webhook)"
+    ],
+    "Security": [
+        "Check patch compliance",
+        "Validate access control policies",
+        "Run vulnerability scan",
+        "Verify antivirus/EDR signatures updated",
+        "Confirm encryption at rest and in transit",
+        "Audit expired or weak TLS certificates",
+        "Check multi-factor authentication enforcement",
+        "Review firewall/NSG rules",
+        "Audit privileged account usage",
+        "Ensure least privilege principle applied",
+        "Check endpoint hardening (disable unused ports)",
+        "Run penetration test in staging environment",
+        "Review SIEM dashboards for anomalies",
+        "Verify data backup encryption",
+        "Check compliance with GDPR/ISO/NIST/PCI standards"
+    ]
 }
 
 # -----------------------------
@@ -72,14 +137,14 @@ def map_health_to_label(score):
 
 def rule_based_recommendations(resource):
     recs = []
-    if resource["Connectivity"] == "NotRecentlyConnected":
-        recs.append(recommendations["Connectivity"][0])
-    if resource["Update"] in ["NeedsAttention", "UpdateInProgress"]:
-        recs.append(recommendations["Update"][1])
+    if resource["Connectivity"] in ["NotRecentlyConnected", "NeedsAttention"]:
+        recs.append(random.choice(recommendations["Connectivity"]))
+    if resource["Update"] in ["NeedsAttention", "UpdateInProgress", "UpdateAvailable"]:
+        recs.append(random.choice(recommendations["Update"]))
     if resource["Alerts"] == "NeedsAttention":
-        recs.append(recommendations["Alerts"][0])
+        recs.append(random.choice(recommendations["Alerts"]))
     if resource["Security"] == "NonCompliant":
-        recs.append(recommendations["Security"][0])
+        recs.append(random.choice(recommendations["Security"]))
     if not recs:
         recs.append("No action required")
     return recs[:3]

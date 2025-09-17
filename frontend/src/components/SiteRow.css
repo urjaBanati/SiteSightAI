@@ -1,0 +1,56 @@
+.site-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 3fr;
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  align-items: center;
+  font-size: 14px;
+}
+
+.site-name {
+  font-weight: bold;
+  color: #66a3ff;
+}
+
+.status-green {
+  color: #00cc66;
+  font-weight: bold;
+}
+
+.status-red {
+  color: #ff4d4d;
+  font-weight: bold;
+}
+
+.status-grey {
+  color: #999999;
+  font-weight: bold;
+}
+
+.recommendation {
+  font-size: 12px;
+  color: #cccccc;
+}
+.site-health {
+  font-size: 13px;
+  font-weight: bold;
+  color: #00aaff; /* Azure blue */
+  margin-left: 10px;
+}
+
+.recommendation {
+  font-size: 12px;
+  color: #cccccc;
+  margin-top: 5px;
+}
+
+.recommendation ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.recommendation li {
+  margin-bottom: 4px;
+  list-style-type: disc;
+}
+

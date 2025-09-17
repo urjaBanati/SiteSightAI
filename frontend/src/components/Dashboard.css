@@ -1,18 +1,105 @@
+/* Dashboard.css - header + rows share the same grid layout */
+
 .dashboard {
-  background-color: #0b0c1b;
-  color: white;
+  background-color: #0f111a;
+  color: #e0e6f0;
   min-height: 100vh;
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .dashboard-title {
-  text-align: center;
-  margin-bottom: 20px;
+  color: #66a3ff;
+  margin-bottom: 14px;
+  font-size: 20px;
 }
 
-.site-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+/* container around header + rows */
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a2d3e;
+}
+
+/* grid columns:
+   SiteName | HealthScore | Connectivity | Update | Alerts | Security | Recommendations
+   Adjust column fractions as needed.
+*/
+.table-header,
+.site-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 3fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+/* header style */
+.table-header {
+  background-color: #1c1f3a;
+  font-weight: 700;
+  font-size: 14px;
+  color: #cfe6ff;
+  border-bottom: 1px solid #2a2d3e;
+}
+
+/* alternate row background for readability */
+.table-body .site-row:nth-child(odd) {
+  background-color: #0f111a;
+}
+.table-body .site-row:nth-child(even) {
+  background-color: #121428;
+}
+
+.site-row {
+  color: #e0e6f0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(42,45,62,0.25);
+  position: relative;
+}
+
+/* site name */
+.site-name {
+  font-weight: 600;
+  color: #a9d1ff;
+}
+
+/* health score styling */
+.site-health {
+  color: #66a3ff;
+  font-weight: 700;
+}
+
+/* status text */
+.status-text {
+  font-weight: 600;
+  text-align: center;
+}
+
+/* status colors */
+.status-green { color: #16c784; } /* green */
+.status-red   { color: #ea3943; } /* red */
+.status-grey  { color: #8b949e; } /* grey */
+
+/* recommendations (bulleted list) */
+.recommendation ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #d5dbe8;
+  font-size: 13px;
+}
+.recommendation li {
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+/* small responsive tweak: wrap on small screens */
+@media (max-width: 900px) {
+  .table-header,
+  .site-row {
+    grid-template-columns: 1fr; /* stack columns vertically */
+    gap: 6px;
+    padding: 8px;
+  }
+  .table-header span { display:block; }
 }
