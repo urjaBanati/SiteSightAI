@@ -177,20 +177,24 @@ def ranked_sites():
     }).reset_index()
 
     # Compute site-level health score
-    site_df["SiteHealthScore"] = site_df[["ConnectivityScore","UpdateScore","AlertScore","SecurityScore"]].mean(axis=1)
+    site_df["SiteHealthScore"] = site_df[
+        ["ConnectivityScore", "UpdateScore", "AlertScore", "SecurityScore"]
+    ].mean(axis=1)
     site_df["RankLabel"] = site_df["SiteHealthScore"].apply(map_health_to_label)
 
-    # One-hot encode resource types for ranking
+    # One-hot encode resource types
     all_types = sorted(set([rtype for sublist in site_df["ResourceType"] for rtype in sublist]))
     for t in all_types:
         site_df[f"Type_{t}"] = site_df["ResourceType"].apply(lambda x: 1 if t in x else 0)
 
-    feature_cols = ["ConnectivityScore","UpdateScore","AlertScore","SecurityScore"] + [f"Type_{t}" for t in all_types]
-    X_rank = site_df[feature_cols]
+     # 🔹 Use the exact rank_features.pkl from training
+    X_rank = site_df.reindex(columns=rank_features, fill_value=0)
 
-    # Predict ranking scores
+    # Predict ranking scores with LambdaMART model
     site_df["RankScore"] = ranker.predict(X_rank)
-    ranked_df = site_df.sort_values(by="RankScore", ascending=False)
+
+    # 🔹 Sort by SiteHealthScore ascending (smallest first)
+    ranked_df = site_df.sort_values(by="SiteHealthScore", ascending=True)
 
     response = []
     for _, row in ranked_df.iterrows():
@@ -201,7 +205,7 @@ def ranked_sites():
             "Security": round(row["SecurityScore"], 2)
         }
 
-        # Get recommendations for each resource
+        # Get recommendations per resource
         site_resources = df[df["SiteName"] == row["SiteName"]]
         recs_per_site = {}
         for _, res in site_resources.iterrows():
@@ -220,5 +224,11 @@ def ranked_sites():
             "Security": site_resources["Security"].mode()[0] if not site_resources.empty else "Unknown",
             "Recommendations": recs_per_site
         })
+
+    # 🔹 Save the entire response once (not inside loop!)
+    with open("ranked_sites.json", "w") as f:
+        json.dump(response, f, indent=2)
+    with open("../frontend/public/ranked_sites.json", "w") as f:
+        json.dump(response, f, indent=2)
 
     return JSONResponse(content=response)
